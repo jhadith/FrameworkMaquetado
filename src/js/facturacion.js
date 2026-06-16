@@ -1,3 +1,4 @@
+//tarjeta que se puede usar 5323622277777785
 document.addEventListener("DOMContentLoaded", () => {
   const formulario = document.querySelector("form");
 
