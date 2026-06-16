@@ -27,7 +27,7 @@ formulario.addEventListener("submit", function (evento) {
     alert("El numero de tarjeta no es válido");
   }
 });
-// tarjeta valida -> 4970100000000054
+// tarjeta valida -> 5323 6222 7777 7785
 function comprobarNumeroTarjeta(datosPago) {
   const numLimpio = String(datosPago.numeroTarjeta).replace(/\D/g, "");
 
