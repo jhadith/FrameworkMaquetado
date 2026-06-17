@@ -5,12 +5,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout - Pago y Envío</title>
+
+  <!-- Carga la hoja de estilos de Bootstrap 5 desde un CDN (Content Delivery Network). -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Icono favicon de la pestaña del navegador. -->
   <link rel="icon" href="Imagenes/Logo.png">
-  <!-- Lucide Icons -->
+
+  <!-- Script de Lucide Icons para renderizar la iconografia vectorial. -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Sincronización de tema (Claro/Oscuro) con Página 1 -->
+  <!-- Parte 1: Sincronización Inmediata del Tema Claro / Oscuro -->
+
+  <!-- Expresion de funcion ejecutada inmediatamente (IIFE) para aplicar el tema guardado en localStorage.
+       Se ejecuta antes de que se dibuje el cuerpo de la pagina (body), evitando el molesto parpadeo blanco
+       si el usuario tiene activado el tema oscuro en su sesion. -->
   <script>
     (function () {
       const theme = localStorage.getItem('theme');
@@ -28,29 +37,50 @@
 
 <body class="bg-body-tertiary">
 
-  <div class="container py-5">
-    <div class="text-center mb-5">
+  <!-- Parte 2: Contenedor y Estructura Principal del Formulario de Compra -->
+
+  <div class="py-5 container">
+    <div class="mb-5 text-center">
       <h2>Finalizar Compra</h2>
       <p class="lead">Por favor, completa todos los datos solicitados para procesar el pedido.</p>
     </div>
 
+    <!-- row: Define una fila de grilla en Bootstrap.
+         g-5: Establece una separacion (gutters) uniforme de nivel 5 entre columnas. -->
     <div class="row g-5">
 
-      <div class="col-md-5 col-lg-4 order-md-last">
-        <h4 class="d-flex justify-content-between align-items-center mb-3">
+      <!-- Columna Derecha (Resumen del carrito):
+           col-md-5: Ocupa 5 de las 12 columnas en pantallas medianas (tablets).
+           col-lg-4: Ocupa 4 de las 12 columnas en pantallas grandes (escritorios).
+           order-md-last: Fuerza a que este bloque se renderice al final (a la derecha) en escritorio,
+           pero se muestra al principio en dispositivos moviles para priorizar la visualizacion del costo total. -->
+      <div class="order-md-last col-md-5 col-lg-4">
+        <h4 class="d-flex align-items-center justify-content-between mb-3">
           <span class="text-primary">Tu Carrito</span>
-          <span class="badge bg-primary rounded-pill" id="badge-cantidad-factura">0</span>
+          <!-- Badge numerica responsiva de Bootstrap. El ID badge-cantidad-factura es modificado por facturacion.js -->
+          <span class="bg-primary rounded-pill badge" id="badge-cantidad-factura">0</span>
         </h4>
+        <!-- Lista de grupo (list-group).
+             El ID lista-carrito-factura es donde facturacion.js inyecta dinamicamente los items guardados. -->
         <ul class="list-group mb-3" id="lista-carrito-factura">
           <!-- El contenido del carrito se inyecta desde facturacion.js -->
         </ul>
       </div>
 
+      <!-- Columna Izquierda (Datos de envio y pago):
+           col-md-7: Ocupa 7 de las 12 columnas en pantallas medianas.
+           col-lg-8: Ocupa 8 de las 12 columnas en pantallas grandes. -->
       <div class="col-md-7 col-lg-8">
         <h4 class="mb-3">Datos del Cliente y Envío</h4>
+
+        <!-- Formulario sin accion (action) declarada porque el envio es controlado asincronamente por facturacion.js -->
         <form>
           <div class="row g-3">
 
+            <!-- Campo Nombres:
+                 form-label: Estiliza la etiqueta del formulario en Bootstrap.
+                 form-control: Da un diseño estetico responsivo al input.
+                 required: Atributo HTML nativo que valida que el campo no este vacio al hacer submit. -->
             <div class="col-sm-6">
               <label for="nombres" class="form-label">Nombres</label>
               <input type="text" class="form-control" id="nombres" placeholder="Ej. Juan Andrés" required>
@@ -60,10 +90,14 @@
               <input type="text" class="form-control" id="apellidos" placeholder="Ej. Pérez Gómez" required>
             </div>
 
+            <!-- Campo Correo:
+                 type="email": Valida de forma nativa que el texto ingresado tenga un formato de correo electronico valido (ej: usuario@dominio.com). -->
             <div class="col-md-6">
               <label for="email" class="form-label">Correo Electrónico</label>
               <input type="email" class="form-control" id="email" placeholder="usuario@ejemplo.com" required>
             </div>
+            <!-- Campo Telefono:
+                 type="tel": Valida el ingreso de caracteres numericos para telefonos. -->
             <div class="col-md-6">
               <label for="telefono" class="form-label">Teléfono</label>
               <input type="tel" class="form-control" id="telefono" placeholder="099 999 9999" required>
@@ -75,6 +109,7 @@
                 placeholder="Calle Principal 123 y Calle Secundaria" required>
             </div>
 
+            <!-- Menu de seleccion de pais (select con clase form-select). -->
             <div class="col-md-5">
               <label for="pais" class="form-label">País</label>
               <select class="form-select" id="pais" required>
@@ -93,6 +128,7 @@
             </div>
           </div>
 
+          <!-- hr class="my-4" dibuja una linea divisoria estetica con margenes verticales simetricos de nivel 4. -->
           <hr class="my-4">
 
           <h4 class="mb-3">Información de Pago</h4>
@@ -118,28 +154,40 @@
 
           <hr class="my-4">
 
+          <!-- Boton que desencadena el evento 'submit' en el formulario.
+               btn-lg y w-100: Estilos de Bootstrap para hacerlo grande y que ocupe todo el ancho disponible. -->
           <button class="w-100 btn btn-primary btn-lg" type="submit">Procesar y Recibir Producto</button>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- Modal de Factura -->
+  <!-- Parte 3: Modal de Visualizacion de Recibo de Factura -->
+
+  <!-- facturaModal: Se activa de manera automatica en facturacion.js mediante bootstrap.Modal.show().
+       data-bs-backdrop="static": Bloquea el cierre accidental del modal si el usuario hace clic fuera de el.
+       data-bs-keyboard="false": Bloquea el cierre del modal al pulsar la tecla Escape. Esto obliga al usuario a usar el boton Cerrar.
+       modal-dialog-scrollable: Permite desplazar verticalmente solo el cuerpo del modal si la factura es muy larga. -->
   <div class="modal fade" id="facturaModal" tabindex="-1" aria-labelledby="facturaModalLabel" aria-hidden="true"
     data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
-        <div class="modal-header border-bottom-0 pb-0">
-          <h1 class="modal-title fs-4 fw-bold text-success" id="facturaModalLabel">
+        <div class="pb-0 border-bottom-0 modal-header">
+          <h1 class="text-success modal-title fs-4 fw-bold" id="facturaModalLabel">
+            <!-- Icono vectorial check-circle inyectado por Lucide. Si se elimina, no se visualizara el icono del exito. -->
             <i data-lucide="check-circle" style="width: 28px; height: 28px; margin-right: 8px;"></i>
             ¡Pago Exitoso!
           </h1>
         </div>
+
+        <!-- En este contenedor se inyecta dinamicamente todo el diseño estructurado de la factura en facturacion.js. -->
         <div class="modal-body" id="factura-modal-body">
           <!-- Contenido de la factura inyectado por JS -->
         </div>
-        <div class="modal-footer border-top-0 pt-0">
+
+        <div class="pt-0 border-top-0 modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <!-- Al hacer clic en 'Volver a la Tienda', se limpia la clave 'carrito' de localStorage para reiniciar la compra. -->
           <a href="index.html" class="btn btn-primary" onclick="localStorage.removeItem('carrito')">Volver a la
             Tienda</a>
         </div>
@@ -147,7 +195,10 @@
     </div>
   </div>
 
+  <!-- Carga la biblioteca JavaScript de Bootstrap para habilitar el control de modales y componentes interactivos. -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Enlace al JS de facturacion, que maneja el calculo de totales, validacion de tarjeta y construccion del recibo. -->
   <script src="./src/js/facturacion.js"></script>
 </body>
 

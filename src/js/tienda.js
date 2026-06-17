@@ -1,8 +1,8 @@
-// ==============================================================
-// SECCIÓN DEL ESTUDIANTE: LÓGICA DE TARJETAS CON PRODUCTOS (PÁGINA 1)
-// ==============================================================
+// Parte 1: Base de Datos de Productos y Estado Global
 
-// Base de datos de productos reales de tecnología (con datos realistas e imágenes de Unsplash)
+// Arreglo de objetos (base de datos local en memoria) que representa el catálogo de productos disponibles en la tienda.
+// Cada objeto contiene atributos clave como identificadores (id), nombres (name), categorías, descripciones detalladas,
+// precios decimales, calificaciones de usuarios, enlaces de imágenes reales y enlaces de compra externa en Amazon.
 const PRODUCTOS = [
   {
     id: 1,
@@ -105,48 +105,66 @@ const PRODUCTOS = [
   }
 ];
 
-// Estado global de la aplicación
+// Estado global que rastrea los datos interactivos en tiempo de ejecucion:
+// 'carrito': Arreglo de productos elegidos, se carga desde localStorage parseando el texto plano JSON. Si no existe, se inicializa como arreglo vacio.
 let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+// 'categoriaActiva': Almacena el filtro de categoria seleccionado actualmente en el menu de navegacion.
 let categoriaActiva = "Todos";
+// 'terminoBusqueda': Almacena la cadena ingresada por el usuario en el campo de busqueda.
 let terminoBusqueda = "";
+// 'productoPendienteEliminar': Almacena temporalmente el ID del producto que el usuario desea remover, para confirmar en el modal de Bootstrap.
 let productoPendienteEliminar = null;
 
-// Inicialización de la tienda
+
+// Parte 2: Inicializacion de Componentes al Cargar la Pagina
+
 document.addEventListener("DOMContentLoaded", () => {
+  // El navegador dispara DOMContentLoaded cuando el documento HTML esta completamente estructurado.
+  // Es el momento seguro para iniciar las funciones de renderizado y asociar escuchadores de eventos al DOM.
   renderProductos();
   actualizarVistaCarrito();
   setupEventListeners();
-  
-  // Refresca iconos de Lucide al cargar la vista
+
+  // Lucide Icons genera iconos vectoriales limpios y responsivos. Si la libreria lucide esta enlazada en el HTML,
+  // lucide.createIcons() busca las etiquetas con atributos 'data-lucide' y dibuja el SVG correspondiente.
   if (window.lucide) {
     lucide.createIcons();
   }
 });
 
-// Configurar los manejadores de eventos
+
+// Parte 3: Escuchadores de Eventos del Sistema (Event Listeners)
+
 function setupEventListeners() {
-  // Manejador del buscador
+  // Manejador del cuadro de busqueda de texto interactivo.
   const buscador = document.getElementById("search-input");
   if (buscador) {
+    // Escucha el evento 'input' en tiempo real (cada tecla pulsada por el usuario).
     buscador.addEventListener("input", (e) => {
+      // Convierte el valor buscado a minusculas para hacer una busqueda insensible a mayusculas/minusculas (case-insensitive).
       terminoBusqueda = e.target.value.toLowerCase();
+      // Vuelve a dibujar el catalogo filtrando los productos segun el termino ingresado.
       renderProductos();
     });
   }
 
-  // Prevenir envío por defecto del formulario del buscador
+  // Previene el envio por defecto si el usuario pulsa Enter en el formulario del buscador.
+  // Evita la recarga no deseada de la pagina.
   const buscarForm = document.querySelector("form[role='search']");
   if (buscarForm) {
     buscarForm.addEventListener("submit", (e) => e.preventDefault());
   }
 
-  // Manejar el cambio de categorías (desde el menú)
+  // Maneja el filtrado de categorias interactivo.
+  // document.querySelectorAll selecciona todos los elementos que coincidan con la regla CSS indicada y retorna un NodeList.
   const enlacesMenu = document.querySelectorAll("#category-filter .nav-link");
   enlacesMenu.forEach(enlace => {
     enlace.addEventListener("click", (e) => {
+      // e.currentTarget referencia al enlace especifico sobre el cual se hizo clic.
+      // dataset.category obtiene el valor configurado en el atributo 'data-category' del HTML.
       const texto = e.currentTarget.dataset.category;
-      
-      // Mapeo simple de categorías según el texto del menú
+
+      // Control de seleccion de categoria activa segun el enlace clicleado.
       if (texto === "Todos") {
         categoriaActiva = "Todos";
       } else if (texto === "Laptops") {
@@ -156,38 +174,46 @@ function setupEventListeners() {
       } else if (texto === "Gadgets") {
         categoriaActiva = "Gadgets";
       } else {
-        return; // No filtrar en otros enlaces
+        return; // Detiene la funcion si es un enlace diferente a los filtros.
       }
 
+      // Evita la navegacion predeterminada del enlace de hipertexto.
       e.preventDefault();
-      
-      // Actualizar clase activa en Bootstrap nav links
+
+      // Modifica las clases visuales de Bootstrap en el menu de navegacion.
+      // Quita la clase activa (link-secondary) y restablece el estilo de enlace de enfasis de cuerpo en todos los elementos.
       enlacesMenu.forEach(el => {
         el.classList.remove("link-secondary");
         el.classList.add("link-body-emphasis");
       });
+      // Aplica el estilo activo de Bootstrap al elemento seleccionado especifico.
       e.currentTarget.classList.remove("link-body-emphasis");
       e.currentTarget.classList.add("link-secondary");
 
+      // Redibuja las tarjetas de productos aplicando el nuevo filtro de categoria.
       renderProductos();
 
+      // Cierre automatico del menu colapsable de Bootstrap en dispositivos moviles (resoluciones menores a 992px)
       const menuMovil = document.getElementById("marketplace-menu");
       const menuAbierto = menuMovil && menuMovil.classList.contains("show");
       if (menuAbierto && window.innerWidth < 992) {
+        // Obtiene o crea la instancia de colapso de Bootstrap y fuerza su ocultacion.
         const bsCollapse = bootstrap.Collapse.getOrCreateInstance(menuMovil, { toggle: false });
         bsCollapse.hide();
       }
     });
   });
 
+  // Manejador del boton de confirmacion de eliminacion del item de la lista en el modal.
   const confirmarEliminarBtn = document.getElementById("confirm-remove-item");
   if (confirmarEliminarBtn) {
     confirmarEliminarBtn.addEventListener("click", () => {
       if (productoPendienteEliminar !== null) {
         eliminarDelCarrito(productoPendienteEliminar);
-        productoPendienteEliminar = null;
+        productoPendienteEliminar = null; // Limpia el estado temporal
       }
 
+      // Oculta el modal de confirmacion usando la API JavaScript de Bootstrap 5.
       const modalEl = document.getElementById("remove-item-modal");
       const bsModal = bootstrap.Modal.getInstance(modalEl);
       if (bsModal) {
@@ -197,20 +223,25 @@ function setupEventListeners() {
   }
 }
 
-// Renderizar tarjetas de productos utilizando clases nativas de Bootstrap 5
+
+// Parte 4: Renderizado Dinamico de las Tarjetas de Producto
+
 function renderProductos() {
   const grid = document.getElementById("productos-grid");
   if (!grid) return;
 
+  // Limpia el grid antes de inyectar las tarjetas filtradas.
   grid.innerHTML = "";
 
+  // filter() genera un subarreglo con los productos que cumplen las dos condiciones dadas.
   const productosFiltrados = PRODUCTOS.filter(producto => {
     const coincideCategoria = categoriaActiva === "Todos" || producto.category === categoriaActiva;
-    const coincideBusqueda = producto.name.toLowerCase().includes(terminoBusqueda) || 
-                              producto.description.toLowerCase().includes(terminoBusqueda);
+    const coincideBusqueda = producto.name.toLowerCase().includes(terminoBusqueda) ||
+      producto.description.toLowerCase().includes(terminoBusqueda);
     return coincideCategoria && coincideBusqueda;
   });
 
+  // Si no hay coincidencias con la busqueda o categoria, muestra una interfaz amigable.
   if (productosFiltrados.length === 0) {
     grid.innerHTML = `
       <div class="col-12 text-center py-5">
@@ -221,14 +252,17 @@ function renderProductos() {
     return;
   }
 
+  // Genera cada tarjeta del catalogo utilizando clases nativas y semanticas de Bootstrap 5.
   productosFiltrados.forEach(producto => {
+    // Calcula el porcentaje de descuento si existe un precio original superior al precio de venta.
     const descuento = producto.originalPrice ? Math.round(((producto.originalPrice - producto.price) / producto.originalPrice) * 100) : 0;
-    
+
+    // Plantilla HTML modularizada para inyectar cada tarjeta de producto.
     const cardHTML = `
       <div class="col">
         <div class="card h-100 shadow-sm border border-light-subtle bg-body">
           
-          <!-- Imagen y Badge -->
+          <!-- Imagen y etiquetas del producto -->
           <div class="position-relative overflow-hidden bg-body-tertiary d-flex align-items-center justify-content-center border-bottom" style="height: 200px;">
             <img 
               src="${producto.image}" 
@@ -247,7 +281,7 @@ function renderProductos() {
             </span>
           </div>
 
-          <!-- Contenido de la tarjeta con clases de alto contraste -->
+          <!-- Detalles e informacion de la tarjeta -->
           <div class="card-body d-flex flex-column">
             <h5 
               class="card-title text-body fw-bold cursor-pointer mb-2"
@@ -261,7 +295,7 @@ function renderProductos() {
               ${producto.description}
             </p>
 
-            <!-- Estrellas (Amazon) -->
+            <!-- Sistema de calificacion mediante estrellas vectoriales (Amazon UX style) -->
             <div class="d-flex align-items-center mt-2 mb-3 gap-1">
               <span class="text-warning d-flex">
                 ${obtenerEstrellasHTML(producto.rating)}
@@ -269,7 +303,7 @@ function renderProductos() {
               <span class="text-muted" style="font-size: 0.8rem;">(${producto.rating})</span>
             </div>
 
-            <!-- Precios y Acciones -->
+            <!-- Area de precios e interaccion de compra -->
             <div class="product-card-actions d-flex align-items-center justify-content-between mt-auto pt-2 border-top border-light-subtle">
               <div class="product-card-price d-flex flex-column">
                 <span class="text-body fw-bold product-price">
@@ -306,21 +340,24 @@ function renderProductos() {
         </div>
       </div>
     `;
+
+    // insertAdjacentHTML inserta los nodos parseados al final del grid sin destruir ni re-analizar los elementos previos.
+    // Esto es mas optimo en rendimiento que utilizar el operador += en innerHTML.
     grid.insertAdjacentHTML('beforeend', cardHTML);
   });
 
-  // Re-inicializa iconos lucide que acabamos de inyectar
+  // Re-inicializa los iconos de Lucide cargados dinamicamente con las plantillas insertadas.
   if (window.lucide) {
     lucide.createIcons();
   }
 }
 
-// Helper para dibujar estrellas de Amazon
 function obtenerEstrellasHTML(rating) {
+  // Genera un bloque HTML que contiene 5 iconos vectoriales de estrellas completas, medias o vacias segun el rating numerico.
   let html = "";
   const enteras = Math.floor(rating);
   const tieneMedio = rating % 1 >= 0.5;
-  
+
   for (let i = 1; i <= 5; i++) {
     if (i <= enteras) {
       html += `<i data-lucide="star" style="width: 14px; height: 14px; fill: currentColor;"></i>`;
@@ -333,16 +370,22 @@ function obtenerEstrellasHTML(rating) {
   return html;
 }
 
-// Control de apertura y cierre del Carrito lateral (Bootstrap Offcanvas API)
+
+// Parte 5: Logica de Administracion del Carrito y Almacenamiento Local (LocalStorage)
+
 function toggleCart(abrir) {
+  // Esta funcion despliega u oculta el contenedor Offcanvas (panel lateral) de Bootstrap.
   const sidebarElement = document.getElementById("cart-sidebar");
   if (!sidebarElement) return;
 
+  // Busca una instancia activa creada anteriormente para el elemento dado.
   let bsOffcanvas = bootstrap.Offcanvas.getInstance(sidebarElement);
   if (!bsOffcanvas) {
+    // Si no existia una instancia, la inicializa.
     bsOffcanvas = new bootstrap.Offcanvas(sidebarElement);
   }
 
+  // Llama a los metodos de la API de Bootstrap para controlar la visibilidad del Offcanvas lateral.
   if (abrir) {
     bsOffcanvas.show();
   } else {
@@ -350,16 +393,19 @@ function toggleCart(abrir) {
   }
 }
 
-// Agregar un producto al carrito
 function agregarAlCarrito(productId) {
+  // Busca el objeto del producto dentro del arreglo principal por su identificador unico.
   const producto = PRODUCTOS.find(p => p.id === productId);
   if (!producto) return;
 
+  // Comprueba si el item ya fue agregado al carrito previamente.
   const itemExistente = carrito.find(item => item.id === productId);
 
   if (itemExistente) {
+    // Si ya existe en el carrito, se incrementa la cantidad en una unidad.
     itemExistente.quantity += 1;
   } else {
+    // Si es un producto nuevo en la sesion actual, se agrega al arreglo estructurando los campos necesarios.
     carrito.push({
       id: producto.id,
       name: producto.name,
@@ -370,17 +416,19 @@ function agregarAlCarrito(productId) {
     });
   }
 
+  // Serializa los cambios y los guarda en persistencia del navegador.
   guardarYActualizarCarrito();
-  
-  // Dar retroalimentacion sin abrir el carrito automaticamente
+
+  // Muestra una breve microanimacion visual en el boton del carrito como respuesta interactiva.
   mostrarConfirmacionAgregado(producto.name);
 }
 
-// Cambiar cantidad de un producto (+ o -)
 function cambiarCantidad(productId, delta) {
+  // Permite incrementar o disminuir la cantidad de un item desde el panel lateral del carrito.
   const item = carrito.find(item => item.id === productId);
   if (!item) return;
 
+  // Si el item tiene cantidad 1 y se presiona '-' (delta < 0), se solicita confirmacion mediante un modal.
   if (item.quantity === 1 && delta < 0) {
     solicitarConfirmacionEliminar(item);
     return;
@@ -388,6 +436,7 @@ function cambiarCantidad(productId, delta) {
 
   item.quantity += delta;
 
+  // Asegura que no existan cantidades invalidas menores a 1 en el flujo normal.
   if (item.quantity <= 0) {
     item.quantity = 1;
   } else {
@@ -396,12 +445,14 @@ function cambiarCantidad(productId, delta) {
 }
 
 function mostrarConfirmacionAgregado(nombreProducto) {
+  // Ofrece una microinteraccion aplicando clases temporales de animacion CSS al boton flotante del carrito.
   const cartBtn = document.getElementById("cart-btn");
   if (!cartBtn) return;
 
   cartBtn.setAttribute("title", `${nombreProducto} agregado al carrito`);
   cartBtn.classList.add("cart-added");
 
+  // Remueve las clases y atributos de animacion despues de 900 milisegundos.
   setTimeout(() => {
     cartBtn.classList.remove("cart-added");
     cartBtn.removeAttribute("title");
@@ -409,13 +460,16 @@ function mostrarConfirmacionAgregado(nombreProducto) {
 }
 
 function solicitarConfirmacionEliminar(item) {
+  // Almacena el ID del producto que se eliminara una vez confirmada la accion.
   productoPendienteEliminar = item.id;
 
+  // Inyecta el nombre del producto en el cuerpo del modal de advertencia.
   const nombreEl = document.getElementById("remove-item-name");
   if (nombreEl) {
     nombreEl.innerText = item.name;
   }
 
+  // Despliega el modal de confirmacion con la API de Bootstrap.
   const modalEl = document.getElementById("remove-item-modal");
   if (!modalEl) return;
 
@@ -423,19 +477,23 @@ function solicitarConfirmacionEliminar(item) {
   bsModal.show();
 }
 
-// Eliminar un producto del carrito
 function eliminarDelCarrito(productId) {
+  // filter() genera un nuevo arreglo excluyendo el producto cuyo id coincide con el que se desea remover.
   carrito = carrito.filter(item => item.id !== productId);
   guardarYActualizarCarrito();
 }
 
-// Guardar en LocalStorage y actualizar la UI
 function guardarYActualizarCarrito() {
+  // JSON.stringify() convierte el arreglo de objetos del carrito en una cadena de texto (string).
+  // localStorage.setItem guarda de forma persistente esa cadena en el almacenamiento local del navegador del usuario.
   localStorage.setItem('carrito', JSON.stringify(carrito));
+  // Llama a la actualizacion de la interfaz grafica.
   actualizarVistaCarrito();
 }
 
-// Actualizar todos los elementos de la interfaz del carrito
+
+// Parte 6: Actualizacion de la Interfaz Grafica del Carrito lateral
+
 function actualizarVistaCarrito() {
   const itemsContainer = document.getElementById("cart-items-container");
   const cartCount = document.getElementById("cart-count");
@@ -444,22 +502,23 @@ function actualizarVistaCarrito() {
 
   if (!itemsContainer) return;
 
+  // Vacia la lista del sidebar del carrito.
   itemsContainer.innerHTML = "";
 
-  // Calcular cantidad total de productos
+  // reduce() acumula los valores sumando el campo quantity de cada objeto en el carrito.
   const totalCantidad = carrito.reduce((acc, item) => acc + item.quantity, 0);
-  
-  // Actualizar el Badge del botón del carrito en el Navbar
+
+  // Actualiza la burbuja numerica (badge de cantidad) flotante del boton del navbar.
   if (cartCount) {
     if (totalCantidad > 0) {
       cartCount.innerText = totalCantidad;
-      cartCount.style.display = 'flex';
+      cartCount.style.display = 'flex'; // Hace visible el indicador
     } else {
-      cartCount.style.display = 'none';
+      cartCount.style.display = 'none'; // Oculta el indicador si esta vacio
     }
   }
 
-  // Si el carrito está vacío
+  // Renderiza una vista vacia si no hay productos agregados en el carrito.
   if (carrito.length === 0) {
     itemsContainer.innerHTML = `
       <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center">
@@ -472,39 +531,40 @@ function actualizarVistaCarrito() {
     `;
     if (cartSubtotal) cartSubtotal.innerText = "$0.00";
     if (checkoutBtn) {
+      // Bloquea el boton de pago para evitar navegacion si el carrito no tiene items.
       checkoutBtn.classList.add("disabled");
       checkoutBtn.setAttribute("aria-disabled", "true");
     }
-    
+
     if (window.lucide) lucide.createIcons();
     return;
   }
 
+  // Activa el boton de checkout en la interfaz de usuario.
   if (checkoutBtn) {
     checkoutBtn.classList.remove("disabled");
     checkoutBtn.removeAttribute("aria-disabled");
   }
 
-  // Rellenar items del carrito
+  // Inyecta dinamicamente los productos en el panel lateral del carrito.
   let subtotal = 0;
-  
+
   carrito.forEach(item => {
     subtotal += item.price * item.quantity;
-    
+
     const itemHTML = `
       <div class="d-flex align-items-center gap-2 p-2 bg-body-secondary rounded-3 mb-2 border border-secondary-subtle">
-        <!-- Imagen -->
+        <!-- Miniatura del Producto -->
         <img src="${item.image}" alt="${item.name}" class="rounded object-fit-cover bg-body" style="width: 45px; height: 45px; flex-shrink: 0;">
         
-        <!-- Nombre y Precio (Evita desbordamiento con style min-width y text-truncate) -->
+        <!-- Nombre truncado y precio unitario -->
         <div class="flex-grow-1" style="min-width: 0;">
           <h6 class="text-body fw-bold mb-0 text-truncate" style="font-size: 0.85rem;" title="${item.name}">${item.name}</h6>
           <small class="text-secondary">$${item.price.toFixed(2)}</small>
         </div>
 
-        <!-- Controles y Quitar (Mantiene su ancho fijo con flex-shrink: 0) -->
+        <!-- Controles interactivos de cantidad y boton de remocion rápida -->
         <div class="d-flex flex-column align-items-end gap-1.5" style="flex-shrink: 0;">
-          <!-- Control de cantidades -->
           <div class="input-group input-group-sm" style="width: 85px;">
             <button 
               onclick="cambiarCantidad(${item.id}, -1)" 
@@ -525,7 +585,7 @@ function actualizarVistaCarrito() {
             </button>
           </div>
 
-          <!-- Botón Eliminar -->
+          <!-- Boton simple para quitar el producto -->
           <button 
             onclick="eliminarDelCarrito(${item.id})" 
             class="btn btn-link text-danger p-0 border-0 text-decoration-none d-flex align-items-center gap-0.5"
@@ -540,6 +600,7 @@ function actualizarVistaCarrito() {
     itemsContainer.insertAdjacentHTML('beforeend', itemHTML);
   });
 
+  // Muestra el total acumulado en pantalla.
   if (cartSubtotal) {
     cartSubtotal.innerText = `$${subtotal.toFixed(2)}`;
   }
@@ -549,52 +610,59 @@ function actualizarVistaCarrito() {
   }
 }
 
-// Abrir modal con detalles expandidos de un producto (Bootstrap Modal API)
+
+// Parte 7: Modal de Detalles Extendidos del Producto
+
 function abrirModalDetalles(productId) {
+  // Esta funcion recupera un producto y lo dibuja detalladamente en un modal emergente centralizado.
   const producto = PRODUCTOS.find(p => p.id === productId);
   if (!producto) return;
 
-  // Cargar datos en los elementos del modal estático de index.html
+  // Modifica los atributos de los elementos estaticos que ya existen dentro de la estructura modal en index.html.
   document.getElementById("modal-product-img").src = producto.image;
   document.getElementById("modal-product-img").alt = producto.name;
   document.getElementById("modal-product-cat").innerText = producto.category;
   document.getElementById("modal-product-name").innerText = producto.name;
   document.getElementById("modal-product-desc").innerText = producto.description;
   document.getElementById("modal-product-price").innerText = `$${producto.price.toFixed(2)}`;
-  
+
   const originalPriceEl = document.getElementById("modal-product-orig-price");
   if (producto.originalPrice) {
     originalPriceEl.innerText = `$${producto.originalPrice.toFixed(2)}`;
+    // style.display = 'inline-block' vuelve a hacer visible la etiqueta si esta oculta.
     originalPriceEl.style.display = 'inline-block';
   } else {
+    // Si el producto no tiene un descuento (precio original), oculta el elemento visual para no confundir al usuario.
     originalPriceEl.style.display = 'none';
   }
 
+  // Inserta la representacion en estrellas dinamica de la calificacion.
   document.getElementById("modal-product-stars").innerHTML = obtenerEstrellasHTML(producto.rating);
   document.getElementById("modal-product-rating").innerText = `(${producto.rating})`;
   document.getElementById("modal-product-amazon").href = producto.amazonLink;
-  
+
+  // Configura el evento de clic en el boton de agregar al carrito dentro del modal.
   const addBtn = document.getElementById("modal-add-btn");
   addBtn.onclick = () => {
     agregarAlCarrito(producto.id);
     cerrarModalDetalles();
   };
 
-  // Mostrar modal con la API de Bootstrap
+  // Muestra el modal mediante el modulo nativo bootstrap.Modal.
   const modalEl = document.getElementById("product-details-modal");
   let bsModal = bootstrap.Modal.getInstance(modalEl);
   if (!bsModal) {
     bsModal = new bootstrap.Modal(modalEl);
   }
   bsModal.show();
-  
+
   if (window.lucide) {
     lucide.createIcons();
   }
 }
 
-// Cerrar modal
 function cerrarModalDetalles() {
+  // Fuerza el cierre del modal centrado si es necesario.
   const modalEl = document.getElementById("product-details-modal");
   let bsModal = bootstrap.Modal.getInstance(modalEl);
   if (bsModal) {
@@ -602,14 +670,15 @@ function cerrarModalDetalles() {
   }
 }
 
-// Hacer globales las funciones que se llaman desde el HTML inline
+
+// Parte 8: Enlace de Funciones en el Ambito Global (Window Scope)
+
+// Dado que este archivo JavaScript puede modularizarse o compilarse en ambitos aislados, los eventos de HTML inline
+// (como onclick="agregarAlCarrito(1)") necesitan buscar las funciones en el objeto 'window' global de la pagina.
+// Asignamos explicitamente cada funcion interactiva a propiedades del objeto window para garantizar su acceso.
 window.agregarAlCarrito = agregarAlCarrito;
 window.cambiarCantidad = cambiarCantidad;
 window.eliminarDelCarrito = eliminarDelCarrito;
 window.toggleCart = toggleCart;
 window.abrirModalDetalles = abrirModalDetalles;
 window.cerrarModalDetalles = cerrarModalDetalles;
-
-// ==============================================================
-// FIN DE LA SECCIÓN DEL ESTUDIANTE
-// ==============================================================
