@@ -270,9 +270,9 @@ function renderProductos() {
             </div>
 
             <!-- Precios y Acciones -->
-            <div class="d-flex align-items-center justify-content-between mt-auto pt-2 border-top border-light-subtle">
-              <div class="d-flex flex-column">
-                <span class="text-body fw-bold" style="font-size: 1.15rem;">
+            <div class="product-card-actions d-flex align-items-center justify-content-between mt-auto pt-2 border-top border-light-subtle">
+              <div class="product-card-price d-flex flex-column">
+                <span class="text-body fw-bold product-price">
                   $${producto.price.toFixed(2)}
                 </span>
                 ${producto.originalPrice ? `
@@ -282,20 +282,19 @@ function renderProductos() {
                 ` : ''}
               </div>
 
-              <div class="d-flex gap-1.5">
+              <div class="product-card-buttons d-flex gap-1">
                 <a 
                   href="${producto.amazonLink}" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center" 
-                  style="width: 32px; height: 32px;"
+                  class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center product-external-btn" 
                   title="Ver en Amazon"
                 >
                   <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
                 </a>
                 <button 
                   onclick="agregarAlCarrito(${producto.id})" 
-                  class="btn btn-sm btn-primary d-flex align-items-center gap-1 px-3"
+                  class="btn btn-sm btn-primary d-flex align-items-center justify-content-center gap-1 px-3 product-add-btn"
                 >
                   <i data-lucide="shopping-cart" style="width: 14px; height: 14px;"></i>
                   <span>Añadir</span>
