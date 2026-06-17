@@ -97,58 +97,49 @@
   </div>
 
   <header class="mb-3 p-3 border-bottom">
-    <div class="container">
-      <div class="d-flex flex-wrap justify-content-lg-start align-items-center justify-content-center">
+    <nav class="container navbar navbar-expand-lg p-0 marketplace-navbar">
+      <div class="d-flex flex-wrap justify-content-lg-start align-items-center justify-content-center w-100">
         <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-decoration-none link-body-emphasis">
           <svg class="me-2 bi" width="40" height="32" role="img" aria-label="Bootstrap">
             <use xlink:href="#bootstrap"></use>
           </svg>
         </a>
-        <ul class="justify-content-center me-lg-auto mb-2 mb-md-0 nav col-12 col-lg-auto">
+        <button class="navbar-toggler ms-auto order-2" type="button" data-bs-toggle="collapse"
+          data-bs-target="#marketplace-menu" aria-controls="marketplace-menu" aria-expanded="false"
+          aria-label="Abrir menu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse order-4 order-lg-0" id="marketplace-menu">
+        <ul id="category-filter" class="justify-content-center me-lg-auto mb-2 mb-md-0 nav col-12 col-lg-auto">
           <li>
-            <a href="#" class="px-2 nav-link link-secondary">Todos</a>
+            <a href="#" data-category="Todos" class="px-2 nav-link link-secondary">Todos</a>
           </li>
           <li>
-            <a href="#" class="px-2 nav-link link-body-emphasis">Laptops</a>
+            <a href="#" data-category="Laptops" class="px-2 nav-link link-body-emphasis">Laptops</a>
           </li>
           <li>
-            <a href="#" class="px-2 nav-link link-body-emphasis">Computadoras</a>
+            <a href="#" data-category="Computadoras" class="px-2 nav-link link-body-emphasis">Computadoras</a>
           </li>
           <li>
-            <a href="#" class="px-2 nav-link link-body-emphasis">Gadgets</a>
+            <a href="#" data-category="Gadgets" class="px-2 nav-link link-body-emphasis">Gadgets</a>
           </li>
         </ul>
         <form class="me-lg-3 mb-3 mb-lg-0 col-12 col-lg-auto" role="search">
           <input type="search" id="search-input" class="form-control" placeholder="Buscar tecnología..."
             aria-label="Search" />
         </form>
+        </div>
         <!-- ========================================== -->
         <!-- SECCIÓN DEL ESTUDIANTE: Botón del Carrito  -->
         <!-- ========================================== -->
         <button id="cart-btn" data-bs-toggle="offcanvas" data-bs-target="#cart-sidebar"
-          class="position-relative d-flex align-items-center me-3 p-2 text-decoration-none btn btn-link link-dark">
+          class="position-relative d-flex align-items-center me-3 p-2 text-decoration-none btn btn-link link-dark order-3 order-lg-0">
           <i data-lucide="shopping-cart" style="width: 24px; height: 24px;"></i>
           <span id="cart-count" class="top-0 position-absolute bg-danger rounded-pill translate-middle start-100 badge"
             style="font-size: 0.7rem; padding: 0.35em 0.5em; display: none;">0</span>
         </button>
-        <!-- FIN DE LA SECCIÓN DEL ESTUDIANTE -->
-        <div class="text-end dropdown">
-          <a href="#" class="d-block text-decoration-none link-body-emphasis dropdown-toggle" data-bs-toggle="dropdown"
-            aria-expanded="false">
-            <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" class="rounded-circle" />
-          </a>
-          <ul class="text-small dropdown-menu">
-            <li><a class="dropdown-item" href="#">New project...</a></li>
-            <li><a class="dropdown-item" href="#">Settings</a></li>
-            <li><a class="dropdown-item" href="#">Profile</a></li>
-            <li>
-              <hr class="dropdown-divider" />
-            </li>
-            <li><a class="dropdown-item" href="#">Sign out</a></li>
-          </ul>
-        </div>
       </div>
-    </div>
+    </nav>
   </header>
 
 
@@ -288,6 +279,25 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="remove-item-modal" tabindex="-1" aria-labelledby="remove-item-modal-label"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="remove-item-modal-label">Eliminar producto</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-0">Quieres eliminar <strong id="remove-item-name">este producto</strong> del carrito?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">No</button>
+          <button type="button" id="confirm-remove-item" class="btn btn-danger">Si, eliminar</button>
         </div>
       </div>
     </div>
